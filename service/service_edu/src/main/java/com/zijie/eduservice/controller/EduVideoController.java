@@ -26,29 +26,20 @@ public class EduVideoController {
     @Autowired
     private EduVideoService eduVideoService;
 
-    @Autowired
-    private VodClient vodClient;
-
     @PostMapping("/addVideo")
     public R addVideo(@RequestBody EduVideo eduVideo){
         eduVideoService.save(eduVideo);
         return R.ok();
     }
 
+    //根据视频id删除视频
     @DeleteMapping("/deleteVideo/{videoId}")
     public R deleteVideo(@PathVariable String videoId){
-        //根据小节获取视频id
-        EduVideo eduVideo = eduVideoService.getById(videoId);
-        String videoSourceId = eduVideo.getVideoSourceId();
-        if (!StringUtils.isEmpty(videoSourceId)) {
-            //根据id，原程调用实现视频删除
-            R r = vodClient.removeAliYunVideo(videoSourceId);
-            if (!r.getSuccess()) {
-                throw new MyException(20001, "删除视频出错了");
-            }
+        if (eduVideoService.deleteVideo(videoId)) {
+            return R.ok();
+        }else {
+            return R.error().message("删除视频失败");
         }
-        eduVideoService.removeById(videoId);
-        return R.ok();
     }
 }
 

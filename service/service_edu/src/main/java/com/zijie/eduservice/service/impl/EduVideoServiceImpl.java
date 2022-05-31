@@ -1,6 +1,5 @@
 package com.zijie.eduservice.service.impl;
 
-import com.aliyuncs.DefaultAcsClient;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zijie.commonutils.R;
 import com.zijie.eduservice.client.VodClient;
@@ -8,11 +7,10 @@ import com.zijie.eduservice.entity.EduVideo;
 import com.zijie.eduservice.mapper.EduVideoMapper;
 import com.zijie.eduservice.service.EduVideoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zijie.servicebase.exception.MyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +47,21 @@ public class EduVideoServiceImpl extends ServiceImpl<EduVideoMapper, EduVideo> i
             vodClient.removeVideos(list);
         }
         baseMapper.delete(wrapper);
+    }
+
+    //根据视频id删除视频
+    @Override
+    public boolean deleteVideo(String videoId) {
+        EduVideo eduVideo = this.getById(videoId);
+        String videoSourceId = eduVideo.getVideoSourceId();
+        if (!StringUtils.isEmpty(videoSourceId)) {
+            //根据id，原程调用实现视频删除
+            R r = vodClient.removeAliYunVideo(videoSourceId);
+            if (!r.getSuccess()) {
+                throw new MyException(20001, "删除视频出错了");
+            }
+        }
+        return this.removeById(videoId);
     }
 
 }
